@@ -58,3 +58,12 @@ if __name__ == "__main__":
 #    summary=train.describe();
 #    print(summary);
 #    summary=test.describe();
+
+#Below is the split between features and labels. WE can use the same method to choose attributes in each function, we just need to edit the col_labels array.
+    col_labels= ["age","workclass","fnlwgt","education","education_num","marital_status","occupation","relationship","race","sex","capital_gain","capital_loss","hours_per_week","native_country"]
+    trainX=train[col_labels];
+    trainY=train["income_class"];
+    testX=test[col_labels];
+    testY=test["income_class"];
+    
+    best_naive_bayes = learn_naive_bayes(trainX, trainY);
