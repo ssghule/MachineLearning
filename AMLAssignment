@@ -1,3 +1,54 @@
-import sklearn;
+import sklearn as sk;
+import numpy as np;
+import pandas as pd;
 from sklearn import tree;
 from sklearn.naive_bayes import GaussianNB;
+
+def load_data(dloc):
+    # The list of data points
+    data_list = []
+    col_labels= ["age","workclass","fnlwgt","education","education_num","marital_status","occupation","relationship","race","sex","capital_gain","capital_loss","hours_per_week","native_country","income_class"]
+    # Open the data file
+    with open(dloc, "r+") as f:
+        # Process each line in the data file
+        for line in f:
+            # Clean the CSV data line
+            line = line.replace(" ","");
+            line = line.strip().split(",");
+            # Add the list containing the datapoint on this in the CSV to the
+            # list containing all data points
+            data_list.append(line);
+    df=pd.DataFrame(data=data_list, columns=col_labels);
+    return df;
+    
+def preprocess_data(df):
+    df=df[df.age!=""]
+    df=df[df.workclass!="?"]
+    df=df[df.occupation!="?"]
+    df=df[df.native_country!="?"]
+    df['age']=df['age'].astype(int);
+    df['workclass']=df['workclass'].astype('str');
+    df['fnlwgt']=df['fnlwgt'].astype(int);
+    df['education']=df['education'].astype('str');
+    df['education_num']=df['education_num'].astype(int);
+    df['marital_status']=df['marital_status'].astype('str');
+    df['occupation']=df['occupation'].astype('str');
+    df['relationship']=df['relationship'].astype('str');
+    df['race']=df['race'].astype('str');
+    df['sex']=df['sex'].astype('str');
+    df['capital_gain']=df['capital_gain'].astype(int);
+    df['capital_loss']=df['capital_loss'].astype(int);
+    df['hours_per_week']=df['hours_per_week'].astype(int);
+    df['native_country']=df['native_country'].astype('str');
+    df['income_class']=df['income_class'].astype('str');
+    return df;
+
+
+if __name__ == "__main__":
+    # The data directory
+    data_loc="C:\\Users\\Sharad\\Desktop\\AML\\adult.data";
+    # Load the data into memory
+    df=load_data(data_loc);
+    p_data=preprocess_data(df);
+    summary=p_data.describe();
+    print (summary);
