@@ -14,6 +14,8 @@ def load_data(dloc):
         for line in f:
             # Clean the CSV data line
             line = line.replace(" ","");
+            line = line.replace(".","");
+            line = line.replace("\"","");
             line = line.strip().split(",");
             # Add the list containing the datapoint on this in the CSV to the
             # list containing all data points
@@ -47,8 +49,12 @@ def preprocess_data(df):
 if __name__ == "__main__":
     # The data directory
     data_loc="C:\\Users\\Sharad\\Desktop\\AML\\adult.data";
+    data_loc1="C:\\Users\\Sharad\\Desktop\\AML\\adult.test";
     # Load the data into memory
     df=load_data(data_loc);
-    p_data=preprocess_data(df);
-    summary=p_data.describe();
-    print (summary);
+    df1=load_data(data_loc1);
+    train=preprocess_data(df);
+    test=preprocess_data(df1);
+#    summary=train.describe();
+#    print(summary);
+#    summary=test.describe();
