@@ -5,7 +5,8 @@ from sklearn import tree;
 from sklearn.naive_bayes import GaussianNB;
 from sklearn.model_selection import KFold;
 from sklearn import linear_model, datasets;
-from sklearn import preprocessing
+from sklearn import preprocessing;
+from sklearn import neighbors;
 
 
 def load_data(dloc):
@@ -109,6 +110,8 @@ if __name__ == "__main__":
     testY=test["income_class"];
 
 
+# In[32]:
+
 
 def learn_naive_bayes(X, Y):
     # This list tracks the learned decision tree with the best accuracy
@@ -139,6 +142,11 @@ def learn_naive_bayes(X, Y):
     return best_model;
     
     
+
+
+# In[30]:
+
+
 def learn_logistic_regression(X, Y):
     # This list tracks the learned decision tree with the best accuracy
     best_model = [ None, float("-inf") ];
@@ -169,12 +177,102 @@ def learn_logistic_regression(X, Y):
     return best_model;
 
 
+# In[33]:
+
 best_naive_bayes = learn_naive_bayes(trainX, trainY);
 print(best_naive_bayes);
 naive_bayes_accuracy = best_naive_bayes[0].score(testX, testY);
+
+
+# In[34]:
+
 print(naive_bayes_accuracy);
+
+
+# In[35]:
 
 best_logistic_regression = learn_logistic_regression(trainX, trainY);
 print(best_logistic_regression);
 logistic_regression_accuracy = best_logistic_regression[0].score(testX, testY);
 print(logistic_regression_accuracy);
+
+
+# In[19]:
+
+
+def learn_decision_tree(X, Y):
+    # This list tracks the learned decision tree with the best accuracy
+    depths = [ 6,6,7,7,8,8,9,9,10,10];
+    best_model = [ None, 0, float("-inf") ];
+    # Create the object that will split the training set into training and
+    # validation sets
+    kf = KFold(n_splits=10);
+    col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]    #
+    # Iterate over each of the 10 splits on the data set
+    for (train, test), cdepth in zip(kf.split(X),depths):
+        # Pull out the features and labels that will be used to train this model     
+        train_X=X.ix[train,col_labels];
+        train_Y=Y.ix[train];
+        valid_X =X.ix[test,col_labels];
+        valid_Y =Y.ix[test];
+        # Create the decision tree object
+        clf = tree.DecisionTreeClassifier(max_depth=cdepth);
+        # Learn the model on the training data that will be used for this
+        # fold
+        clf = clf.fit(train_X, train_Y);
+        # Evaluate the learned model on the validation set
+        accuracy = clf.score(valid_X, valid_Y);
+        # Check whether or not this learned model is the most accuracy model
+        if accuracy > best_model[2]:
+            # Update best_model so that it holds this learned model and its
+            # associated accuracy and hyper-parameter information
+            best_model = [ clf, cdepth, accuracy ];
+    return best_model;
+
+
+# In[20]:
+
+best_decision_tree = learn_decision_tree(trainX, trainY);
+print(best_decision_tree);
+decision_tree_accuracy = best_decision_tree[0].score(testX, testY);
+print(decision_tree_accuracy);
+
+
+# In[25]:
+
+def learn_knn(X, Y):
+    # This list tracks the learned decision tree with the best accuracy
+    k_values = [ 5,5,6,6,7,7,8,8,9,9];
+    best_model = [ None, 0, float("-inf") ];
+    # Create the object that will split the training set into training and
+    # validation sets
+    kf = KFold(n_splits=10);
+    col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]    #
+    # Iterate over each of the 10 splits on the data set
+    for (train, test), k in zip(kf.split(X),k_values):
+        # Pull out the features and labels that will be used to train this model     
+        train_X=X.ix[train,col_labels];
+        train_Y=Y.ix[train];
+        valid_X =X.ix[test,col_labels];
+        valid_Y =Y.ix[test];
+        # Create the decision tree object
+        clf = neighbors.KNeighborsClassifier(n_neighbors=k);
+        # Learn the model on the training data that will be used for this
+        # fold
+        clf = clf.fit(train_X, train_Y);
+        # Evaluate the learned model on the validation set
+        accuracy = clf.score(valid_X, valid_Y);
+        # Check whether or not this learned model is the most accuracy model
+        if accuracy > best_model[2]:
+            # Update best_model so that it holds this learned model and its
+            # associated accuracy and hyper-parameter information
+            best_model = [ clf, k, accuracy ];
+    return best_model;
+
+
+# In[26]:
+
+best_knn = learn_knn(trainX, trainY);
+print(best_knn);
+knn_accuracy = best_knn[0].score(testX, testY);
+print(knn_accuracy);
