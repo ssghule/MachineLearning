@@ -1,0 +1,148 @@
+import sklearn as sk;
+import numpy as np;
+import pandas as pd;
+from sklearn import tree;
+from sklearn.model_selection import KFold;
+from sklearn import linear_model, datasets;
+from sklearn import preprocessing;
+
+
+def load_data(dloc):
+    # The list of data points
+    data_list = []
+    col_labels= ["age","workclass","fnlwgt","education","education_num","marital_status","occupation","relationship","race","sex","capital_gain","capital_loss","hours_per_week","native_country","income_class"]
+    # Open the data file
+    with open(dloc, "r+") as f:
+        # Process each line in the data file
+        for line in f:
+            # Clean the CSV data line
+            line = line.replace(" ","");
+            line = line.replace(".","");
+            line = line.replace("\"","");
+            line = line.strip().split(",");
+            # Add the list containing the datapoint on this in the CSV to the
+            # list containing all data points
+            data_list.append(line);
+    df=pd.DataFrame(data=data_list, columns=col_labels);
+    return df;
+    
+def preprocess_data(df):
+    df=df[df.age!=""]
+    df=df[df.workclass!="?"]
+    df=df[df.occupation!="?"]
+    df=df[df.native_country!="?"]
+    df['age']=df['age'].astype(int);
+    df['workclass']=df['workclass'].astype('str');
+    df['fnlwgt']=df['fnlwgt'].astype(int);
+    df['education']=df['education'].astype('str');
+    df['education_num']=df['education_num'].astype(int);
+    df['marital_status']=df['marital_status'].astype('str');
+    df['occupation']=df['occupation'].astype('str');
+    df['relationship']=df['relationship'].astype('str');
+    df['race']=df['race'].astype('str');
+    df['sex']=df['sex'].astype('str');
+    df['capital_gain']=df['capital_gain'].astype(int);
+    df['capital_loss']=df['capital_loss'].astype(int);
+    df['hours_per_week']=df['hours_per_week'].astype(int);
+    df['native_country']=df['native_country'].astype('str');
+    df['income_class']=df['income_class'].astype('str');
+    df=df.reset_index();
+    
+    
+    age_bins = [0,20, 30, 40, 50, 60, 70, 80, 100]
+    #age_cat_names = ['<20', '21-30',  '31-40', '41-50', '51-60', '61-70', '71-80', '>81']
+    age_cat_names = [1, 2, 3,4,5,6,7,8]
+    age_cat = pd.cut(df['age'], age_bins, labels=age_cat_names)
+    df['age_label'] = pd.cut(df['age'], age_bins, labels=age_cat_names)
+    df['age_label']=df['age_label'].astype(int);
+    
+    '''fnlwgt_bins = []
+    cap_gain_bins = []
+    cap_loss_bins = []
+    hours_bins = []'''
+
+    
+    le = preprocessing.LabelEncoder()
+    le.fit(df['workclass']);
+    df['workclass_label']=le.transform(df['workclass']);
+    #print(df['workclass']);
+    #print(df['workclass_label']);
+
+        
+    le.fit(df['marital_status']);
+    df['marital_status_label']=le.transform(df['marital_status']);
+    
+    le.fit(df['occupation']);
+    df['occupation_label']=le.transform(df['occupation']);
+
+    le.fit(df['relationship']);
+    df['relationship_label']=le.transform(df['relationship']);
+    
+    le.fit(df['race']);
+    df['race_label']=le.transform(df['race']);
+
+    le.fit(df['sex']);
+    df['sex_label']=le.transform(df['sex']);
+
+    le.fit(df['native_country']);
+    df['native_country_label']=le.transform(df['native_country']);
+   
+    return df;
+
+
+if __name__ == "__main__":
+    # The data directory
+    data_loc="C:\\Users\\Sharad\\Desktop\\AML\\adult.data";
+    data_loc1="C:\\Users\\Sharad\\Desktop\\AML\\adult.test";
+    # Load the data into memory
+    df=load_data(data_loc);
+    df1=load_data(data_loc1);
+    train=preprocess_data(df);
+    #print(train.describe());
+    test=preprocess_data(df1);
+    #col_labels= ["workclass","fnlwgt","education",]
+    col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]
+    trainX=train[col_labels];
+    trainY=train["income_class"];
+    testX=test[col_labels];
+    testY=test["income_class"];
+
+
+
+def learn_decision_tree(X, Y):
+    # This list tracks the learned decision tree with the best accuracy
+    depths = [ 6,6,7,7,8,8,9,9,10,10];
+    best_model = [ None, 0, float("-inf") ];
+    # Create the object that will split the training set into training and
+    # validation sets
+    kf = KFold(n_splits=10);
+    col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]    #
+    # Iterate over each of the 10 splits on the data set
+    for (train, test), cdepth in zip(kf.split(X),depths):
+        # Pull out the features and labels that will be used to train this model     
+        train_X=X.ix[train,col_labels];
+        train_Y=Y.ix[train];
+        valid_X =X.ix[test,col_labels];
+        valid_Y =Y.ix[test];
+        # Create the decision tree object
+        clf = tree.DecisionTreeClassifier(max_depth=cdepth);
+        # Learn the model on the training data that will be used for this
+        # fold
+        clf = clf.fit(train_X, train_Y);
+        # Evaluate the learned model on the validation set
+        accuracy = clf.score(valid_X, valid_Y);
+        # Check whether or not this learned model is the most accuracy model
+        if accuracy > best_model[2]:
+            # Update best_model so that it holds this learned model and its
+            # associated accuracy and hyper-parameter information
+            best_model = [ clf, cdepth, accuracy ];
+    return best_model;
+
+
+# In[20]:
+
+best_decision_tree = learn_decision_tree(trainX, trainY);
+print(best_decision_tree);
+decision_tree_accuracy = best_decision_tree[0].score(testX, testY);
+print(decision_tree_accuracy);
+
