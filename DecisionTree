@@ -1,15 +1,17 @@
 import sklearn as sk;
 import numpy as np;
 import pandas as pd;
-from sklearn import tree;
 from sklearn.model_selection import KFold;
-from sklearn import linear_model, datasets;
 from sklearn import preprocessing;
 
 
+from sklearn import tree;
+
 def load_data(dloc):
-    # The list of data points
+#List of data points
     data_list = []
+
+#Column labels
     col_labels= ["age","workclass","fnlwgt","education","education_num","marital_status","occupation","relationship","race","sex","capital_gain","capital_loss","hours_per_week","native_country","income_class"]
     # Open the data file
     with open(dloc, "r+") as f:
@@ -23,12 +25,14 @@ def load_data(dloc):
             # Add the list containing the datapoint on this in the CSV to the
             # list containing all data points
             data_list.append(line);
+#Creating a dataframe with the data
     df=pd.DataFrame(data=data_list, columns=col_labels);
     return df;
     
 def preprocess_data(df):
-    df=df[df.age!=""]
-    df=df[df.workclass!="?"]
+
+    df=df[df.age!=""]   #removing empty rows
+    df=df[df.workclass!="?"] #removing lines with "?" in place of missing value
     df=df[df.occupation!="?"]
     df=df[df.native_country!="?"]
     df['age']=df['age'].astype(int);
@@ -46,28 +50,20 @@ def preprocess_data(df):
     df['hours_per_week']=df['hours_per_week'].astype(int);
     df['native_country']=df['native_country'].astype('str');
     df['income_class']=df['income_class'].astype('str');
-    df=df.reset_index();
+    df=df.reset_index(); #resets the index because some records have been deleted
     
-    
+    #splitting "age" attribute into bins and creating a numeric label for each bin
     age_bins = [0,20, 30, 40, 50, 60, 70, 80, 100]
     #age_cat_names = ['<20', '21-30',  '31-40', '41-50', '51-60', '61-70', '71-80', '>81']
     age_cat_names = [1, 2, 3,4,5,6,7,8]
     age_cat = pd.cut(df['age'], age_bins, labels=age_cat_names)
     df['age_label'] = pd.cut(df['age'], age_bins, labels=age_cat_names)
     df['age_label']=df['age_label'].astype(int);
-    
-    '''fnlwgt_bins = []
-    cap_gain_bins = []
-    cap_loss_bins = []
-    hours_bins = []'''
 
-    
+    #Creating a label column for each of the categorical variables    
     le = preprocessing.LabelEncoder()
     le.fit(df['workclass']);
     df['workclass_label']=le.transform(df['workclass']);
-    #print(df['workclass']);
-    #print(df['workclass_label']);
-
         
     le.fit(df['marital_status']);
     df['marital_status_label']=le.transform(df['marital_status']);
@@ -98,15 +94,14 @@ if __name__ == "__main__":
     df=load_data(data_loc);
     df1=load_data(data_loc1);
     train=preprocess_data(df);
-    #print(train.describe());
     test=preprocess_data(df1);
-    #col_labels= ["workclass","fnlwgt","education",]
+#attributes to be selected for training
     col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]
     trainX=train[col_labels];
+#target variable
     trainY=train["income_class"];
     testX=test[col_labels];
     testY=test["income_class"];
-
 
 
 def learn_decision_tree(X, Y):
@@ -119,7 +114,7 @@ def learn_decision_tree(X, Y):
     col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]    #
     # Iterate over each of the 10 splits on the data set
     for (train, test), cdepth in zip(kf.split(X),depths):
-        # Pull out the features and labels that will be used to train this model     
+        # Pull out the records and labels that will be used to train this model     
         train_X=X.ix[train,col_labels];
         train_Y=Y.ix[train];
         valid_X =X.ix[test,col_labels];
@@ -138,11 +133,7 @@ def learn_decision_tree(X, Y):
             best_model = [ clf, cdepth, accuracy ];
     return best_model;
 
-
-# In[20]:
-
 best_decision_tree = learn_decision_tree(trainX, trainY);
 print(best_decision_tree);
 decision_tree_accuracy = best_decision_tree[0].score(testX, testY);
 print(decision_tree_accuracy);
-
