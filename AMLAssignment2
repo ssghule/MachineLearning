@@ -1,20 +1,20 @@
 def learn_SVM(X, Y):
-    # This list tracks the learned decision tree with the best accuracy
-    c_values = [ 1,2,3,4,5,6,7,8,9,10];
+    #an array of different k values to be tried on the training set
+    k_values = [1,2];
     best_model = [ None, 0, float("-inf") ];
     # Create the object that will split the training set into training and
     # validation sets
-    kf = KFold(n_splits=10);
+    kf = KFold(n_splits=5);
     col_labels= ["age","fnlwgt","workclass_label","education_num","marital_status_label","occupation_label","relationship_label","race_label","sex_label","capital_gain","capital_loss","hours_per_week","native_country_label"]    #
     # Iterate over each of the 10 splits on the data set
-    for (train, test), cv in zip(kf.split(X),c_values):
+    for (train, test), k in zip(kf.split(X),k_values):
         # Pull out the records and labels that will be used to train this model     
         train_X=X.ix[train,col_labels];
         train_Y=Y.ix[train];
         valid_X =X.ix[test,col_labels];
         valid_Y =Y.ix[test];
-        # Create the decision tree object
-        clf =svm.SVC(C=cv);
+        # Create the classifier object
+        clf = svm.SVC(C=k);
         # Learn the model on the training data that will be used for this
         # fold
         clf = clf.fit(train_X, train_Y);
@@ -24,7 +24,7 @@ def learn_SVM(X, Y):
         if accuracy > best_model[2]:
             # Update best_model so that it holds this learned model and its
             # associated accuracy and hyper-parameter information
-            best_model = [ clf, cv, accuracy ];
+            best_model = [ clf, k, accuracy ];
     return best_model;
 
 best_SVM = learn_SVM(trainX, trainY);
