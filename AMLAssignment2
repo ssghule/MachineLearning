@@ -1,6 +1,6 @@
 def learn_SVM(X, Y):
     #an array of different k values to be tried on the training set
-    k_values = [1,2];
+    k_values = [0.25,1,2,3,4,5];
     best_model = [ None, 0, float("-inf") ];
     # Create the object that will split the training set into training and
     # validation sets
