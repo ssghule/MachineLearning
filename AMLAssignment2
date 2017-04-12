@@ -1,3 +1,65 @@
+
+
+def learn_randomForest(X, Y):
+    noOfTrees = [5, 6, 7, 8, 9, 10, 11]
+    best_model = [None, 0, float("-inf"), 0]
+    depth = [10, 12, 14, 16, 18, 20, 22, 24]
+    # Create the object that will split the training set into training and
+    # validation sets
+    kf = KFold(n_splits=10);
+    col_labels = ["age", "fnlwgt", "workclass_label", "education_num", "marital_status_label", "occupation_label",
+                  "relationship_label", "race_label", "sex_label", "capital_gain", "capital_loss", "hours_per_week",
+                  "native_country_label"]
+    for(train, test), number, d in zip(kf.split(X), noOfTrees, depth):
+        # Pull out the records and labels that will be used to train this model
+        train_X = X.ix[train, col_labels]
+        train_Y = Y.ix[train]
+        valid_X = X.ix[test, col_labels]
+        valid_Y = Y.ix[test]
+
+        clf = RandomForestClassifier(n_estimators = number)
+        clf = clf.fit(train_X, train_Y)
+        accuracy = clf.score(valid_X, valid_Y)
+
+        if(accuracy > best_model[2]):
+            best_model = [clf, number, accuracy, d]
+    return best_model
+
+best_randomForest = learn_randomForest(trainX, trainY)
+print(best_randomForest)
+randomForestAccuracy = best_randomForest[0].score(testX, testY)
+print(randomForestAccuracy)
+
+def learn_adaboost(X, Y):
+    estimator = [50, 60, 70, 80, 90, 100, 110]
+    #depth = []
+    best_model = [None, 0, float("-inf")]
+    # Create the object that will split the training set into training and
+    # validation sets
+    kf = KFold(n_splits=10);
+    col_labels = ["age", "fnlwgt", "workclass_label", "education_num", "marital_status_label", "occupation_label",
+                  "relationship_label", "race_label", "sex_label", "capital_gain", "capital_loss", "hours_per_week",
+                  "native_country_label"]
+    for(train, test), number in zip(kf.split(X), estimator):
+        # Pull out the records and labels that will be used to train this model
+        train_X = X.ix[train, col_labels]
+        train_Y = Y.ix[train]
+        valid_X = X.ix[test, col_labels]
+        valid_Y = Y.ix[test]
+
+        clf = AdaBoostClassifier(n_estimators = number)
+        clf = clf.fit(train_X, train_Y)
+        accuracy = clf.score(valid_X, valid_Y)
+
+        if(accuracy > best_model[2]):
+            best_model = [clf, number, accuracy]
+    return best_model
+
+best_adaboost = learn_adaboost(trainX, trainY)
+print(best_adaboost)
+adaboostAccuracy = best_adaboost[0].score(testX, testY)
+print(adaboostAccuracy)
+
 def learn_SVM(X, Y):
     #an array of different k values to be tried on the training set
     k_values = [0.25,1,2,3,4,5];
